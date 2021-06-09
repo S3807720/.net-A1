@@ -6,7 +6,7 @@ namespace MCBA
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Testing commits!!");
+            new Menu();
         }
     }
 }
