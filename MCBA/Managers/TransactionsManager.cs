@@ -25,11 +25,12 @@ namespace MCBA.Managers
         {
 			using var connection = new SqlConnection(_connectionString);
 			using var command = connection.CreateCommand();
-			command.CommandText = "select * from Account";
+			command.CommandText = "select * from [Transaction]";
 
 			return command.GetDataTable().Select().Select(X => new Transaction
 			{
 				transactionId = X.Field<int>("TransactionID"),
+				transactionType = X.Field<string>("TransactionType"),
 				amount = X.Field<decimal>("Amount"),
 				comment = X.Field<string>("Comment"),
 				transactionTimeUtc = X.Field<DateTime>("TransactionTimeUtc")
@@ -45,7 +46,6 @@ namespace MCBA.Managers
 				"insert into [Transaction] (TransactionType, AccountNumber, DestinationAccountNumber," +
 				"Amount, Comment, TransactionTimeUtc) values (@transactionType, @accountNumber, " +
 				"@destinationAccountNumber, @amount, @comment, @transactionTimeUtc)";
-			//command.Parameters.AddWithValue("transactionId", transaction.transactionId);
 			command.Parameters.AddWithValue("transactionType", transaction.transactionType);
 			command.Parameters.AddWithValue("accountNumber", transaction.accountNumber);
 			command.Parameters.AddWithValue("destinationAccountNumber", transaction.destinationAccountNumber);

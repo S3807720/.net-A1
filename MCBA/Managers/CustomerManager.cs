@@ -15,7 +15,7 @@ namespace MCBA.Managers
 	{
 		private readonly string _connectionString;
 
-		List<Customer> customers { get; }
+		public List<Customer> customers { get; }
 
 		public CustomerManager(string connectionString)
         {
@@ -26,6 +26,7 @@ namespace MCBA.Managers
 			command.CommandText = "select * from Customer";
 
 			var accountManager = new AccountManager(_connectionString);
+
 
 			customers = command.GetDataTable().Select().Select(X => new Customer
 			{

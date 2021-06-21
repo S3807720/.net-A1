@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Net.Http;
 
 public class Menu
@@ -57,6 +58,12 @@ public class Menu
 					{
 						Console.WriteLine($"{x["Name"]}\n{x["CustomerID"]}\n{x["Address"]},{x["City"]}, {x["PostCode"]}");
 					}
+					table = DisconnectedAccess("[Transaction]");
+					foreach (var x in table.Select())
+					{
+						Console.WriteLine($"{x["TransactionID"]}\n{x["TransactionType"]}\n" +
+							$"{x["AccountNumber"]},{x["Amount"]}, {x["Comment"]}");
+					}
 				}
 				// bit clunky, but a temp? workaround to throw the error msg anyway
 				if (choice > 6)
@@ -98,8 +105,12 @@ public class Menu
 	private void addCustomerDataToDatabase()
     {
 		var customerManager = new CustomerManager(connectionString);
+		if (customerManager.customers.Any())
+        {
+			return;
+        }
 
-		string custDetailsAddr = "https://coreteaching01.csit.rmit.edu.au/~e87149/wdt/services/customers/";
+		const string custDetailsAddr = "https://coreteaching01.csit.rmit.edu.au/~e87149/wdt/services/customers/";
 
 		using var client = new HttpClient();
 		var json = client.GetStringAsync(custDetailsAddr).Result;
@@ -126,7 +137,7 @@ public class Menu
                 {
 					transaction.accountNumber = account.accountNumber;
 					transaction.destinationAccountNumber = account.accountNumber;
-					transaction.transactionType = 'D';
+					transaction.transactionType = "D";
 					transaction.transactionId = Utilities.transactionIdCount++;
 					transactionsManager.InsertTransaction(transaction);
                 }
@@ -137,9 +148,12 @@ public class Menu
 	private void addLoginDataToDatabase()
     {
 		var loginManager = new LoginManager(connectionString);
-		
-		string loginAddr = "https://coreteaching01.csit.rmit.edu.au/~e87149/wdt/services/logins/";
-		
+		if (loginManager.logins.Any())
+        {
+			return;
+        }
+
+		const string loginAddr = "https://coreteaching01.csit.rmit.edu.au/~e87149/wdt/services/logins/";		
 
 		using var client = new HttpClient();
 		var json = client.GetStringAsync(loginAddr).Result;
@@ -148,7 +162,7 @@ public class Menu
 		{
 			// See here for DateTime format string documentation:
 			// https://docs.microsoft.com/en-us/dotnet/standard/base-types/custom-date-and-time-format-strings
-			DateFormatString = "dd/MM/yyyy"
+			DateFormatString = "dd/MM/yyyy hh:mm:ss tt"
 		});
 		foreach(var login in logins)
         {

@@ -9,7 +9,7 @@ namespace MCBA.Models
     public class Transaction
     {
         public int transactionId { get; set; }
-        public char transactionType { get; set; }
+        public string transactionType { get; set; }
         public int accountNumber { get; set; }
         public int destinationAccountNumber { get; set; }
         public decimal amount { get; set; }
@@ -18,7 +18,7 @@ namespace MCBA.Models
 
         public Transaction() {
             transactionTimeUtc = DateTime.UtcNow;
-            transactionType = 'D';
+            transactionType = "D";
         }
     }  
 }

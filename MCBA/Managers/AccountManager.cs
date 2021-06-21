@@ -29,9 +29,10 @@ namespace MCBA.Managers
 			return command.GetDataTable().Select().Select(X => new Account
 			{
 				accountNumber = X.Field<int>("AccountNumber"),
-				accountType = X.Field<char>("AccountType"),
+				accountType = X.Field<string>("AccountType"),
 				customerId = X.Field<int>("CustomerID"),
-				transactions = transactionsManager.getTransactions(),
+				balance = X.Field<decimal>("Balance"),
+				transactions = transactionsManager.getTransactions()
 			}).ToList();
 		}
 		public void InsertAccount(Account account)

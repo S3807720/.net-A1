@@ -13,7 +13,7 @@ namespace MCBA.Managers
     {
 		private readonly string _connectionString;
 
-		List<Login> logins { get; }
+		public List<Login> logins { get; }
 
 		public LoginManager(string connectionString)
         {

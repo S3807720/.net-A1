@@ -9,7 +9,7 @@ namespace MCBA.Models
     class Account
     {
         public int accountNumber { get; set; }
-        public char accountType { get; set; }
+        public string accountType { get; set; }
         public int customerId { get; set; }
         public decimal balance{ get; set; }
         public List<Transaction> transactions { get; set; }
