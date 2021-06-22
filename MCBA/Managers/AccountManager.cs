@@ -14,17 +14,18 @@ namespace MCBA.Managers
     {
 		private readonly string _connectionString;
 
-		public AccountManager(string connectionString)
+		public AccountManager()
         {
-			_connectionString = connectionString;
+			_connectionString = Utilities.connectionString; ;
 		}
 
-		public List<Account> getAccounts()
+		public List<Account> getAccounts(int customerID)
         {
 			using var connection = new SqlConnection(_connectionString);
 			using var command = connection.CreateCommand();
-			command.CommandText = "select * from Account";
-			var transactionsManager = new TransactionsManager(_connectionString);
+			command.CommandText = "select * from Account where CustomerID = @custId";
+			command.Parameters.AddWithValue("@custId", customerID);
+			var transactionsManager = new TransactionsManager();
 
 			return command.GetDataTable().Select().Select(X => new Account
 			{

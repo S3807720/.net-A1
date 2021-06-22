@@ -1,11 +1,12 @@
 ﻿using MiscellaneousUtilities;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Net.Http;
-
+using SimpleHashing;
 
 namespace MCBA.Managers
 {
@@ -15,9 +16,33 @@ namespace MCBA.Managers
 
 		public List<Login> logins { get; }
 
-		public LoginManager(string connectionString)
+        public int checkLogin(string id, string password, ref string msg)
         {
-			_connectionString = connectionString;
+			foreach (Login log in logins)
+            {
+				if (log.loginId.Equals(id))
+				{
+					if (PBKDF2.Verify(log.passwordHash, password))
+                    {
+						msg = "Login successful!";
+						return log.customerId;
+                    } else
+                    {
+						msg = "Invalid password.";
+						return -1;
+                    }
+				}
+				else
+                {
+					msg = "That ID does not exist.";
+                }
+            }
+			return -1;
+        }
+
+		public LoginManager()
+        {
+			_connectionString = Utilities.connectionString;
 
 			using var connection = new SqlConnection(_connectionString);
 			using var command = connection.CreateCommand();

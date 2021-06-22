@@ -12,30 +12,47 @@ using System.Net.Http;
 
 public class Menu
 {
-	const string connectionString = "server=rmit.australiaeast.cloudapp.azure.com;" +
-		"uid=s3807720_a1;pwd=abc123";
-	private Account loggedIn = null;
+	private string connectionString = Utilities.connectionString;
+	private Customer loggedIn = null;
 
 	public Menu()
 	{
 		addCustomerDataToDatabase();
 		addLoginDataToDatabase();
-		Console.WriteLine("Enter Login ID: ");
-		String loginId = Console.ReadLine();
-		Console.WriteLine("Enter Password: ");
-		String password = Console.ReadLine();
-		if (loginId != loginId)
+		bool loginCheck = false;
+		while (loginCheck == false)
         {
-			Console.WriteLine("Invalid ID!");
-        } else if (password != password)
-        {
-			Console.WriteLine("Invalid password!");
-        } else
-        {
-			DisplayMenu();
-        }
+			Console.WriteLine("Enter Login ID: ");
+			String loginId = Console.ReadLine();
+			Console.WriteLine("Enter Password: ");
+			String password = Console.ReadLine();
+			var logMgr = new LoginManager();
+			var message = "";
+			var id = logMgr.checkLogin(loginId, password, ref message);
+			if (id == -1)
+			{
+				Console.WriteLine(message);
+			} else
+            {
+				loginCheck = true;
+				setLogin(id);
+            }
+		}
+		DisplayMenu();
 
 	}
+	private void setLogin(int id)
+    {
+		var customers = new CustomerManager().customers;
+		foreach(Customer customer in customers)
+        {
+			if (id == customer.customerId)
+            {
+				this.loggedIn = customer;
+				Console.WriteLine($"\nWelcome {customer.name}.\n");
+            }
+        }
+    }
 
 	private void DisplayMenu()
     {
@@ -110,7 +127,7 @@ public class Menu
 
 	private void addCustomerDataToDatabase()
     {
-		var customerManager = new CustomerManager(connectionString);
+		var customerManager = new CustomerManager();
 		if (customerManager.customers.Any())
         {
 			return;
@@ -128,8 +145,8 @@ public class Menu
 
 			DateFormatString = "dd/MM/yyyy hh:mm:ss tt"
 		});
-		var accountManager = new AccountManager(connectionString);
-		var transactionsManager = new TransactionsManager(connectionString);
+		var accountManager = new AccountManager();
+		var transactionsManager = new TransactionsManager();
 		foreach (var customer in customers)
 		{
 			customerManager.InsertCustomer(customer);
@@ -152,7 +169,7 @@ public class Menu
 
 	private void addLoginDataToDatabase()
     {
-		var loginManager = new LoginManager(connectionString);
+		var loginManager = new LoginManager();
 		if (loginManager.logins.Any())
         {
 			return;

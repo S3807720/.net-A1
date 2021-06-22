@@ -15,9 +15,9 @@ namespace MCBA.Managers
     {
 		private readonly string _connectionString;
 
-		public TransactionsManager(string connectionString)
+		public TransactionsManager()
         {
-			_connectionString = connectionString;
+			_connectionString = Utilities.connectionString; ;
 		}
 
 

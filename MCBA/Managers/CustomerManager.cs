@@ -17,15 +17,15 @@ namespace MCBA.Managers
 
 		public List<Customer> customers { get; }
 
-		public CustomerManager(string connectionString)
+		public CustomerManager()
         {
-			_connectionString = connectionString;
+			_connectionString = Utilities.connectionString;
 
 			using var connection = new SqlConnection(_connectionString);
 			using var command = connection.CreateCommand();
 			command.CommandText = "select * from Customer";
 
-			var accountManager = new AccountManager(_connectionString);
+			var accountManager = new AccountManager();
 
 
 			customers = command.GetDataTable().Select().Select(X => new Customer
@@ -35,7 +35,7 @@ namespace MCBA.Managers
 				address = X.Field<string>("Address"),
 				city = X.Field<string>("City"),
 				postCode = X.Field<string>("PostCode"),
-				accounts = accountManager.getAccounts()
+				accounts = accountManager.getAccounts(X.Field<int>("CustomerID"))
 			}).ToList();
 
 		}

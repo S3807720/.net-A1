@@ -21,5 +21,9 @@ namespace MCBA.Models
                 balance += transacts.amount;
             }
         }
+        public override string ToString()
+        {
+            return $"Account Number: {accountNumber}@AccountType: {accountType}@Balance: {balance}@";
+        }
     }
 }

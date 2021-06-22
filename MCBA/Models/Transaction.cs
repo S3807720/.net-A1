@@ -22,19 +22,19 @@ namespace MCBA.Models
             transactionType = "D";
         }
 
-        //return string based on trans type w/ local time conversion
+        //return string based on transact type w/ local time conversion
         public override string ToString()
         {
             if (transactionType != "D")
             {
                 return $"Transaction ID: {transactionId}  Transaction Type: {transactionType} @Account Number: {accountNumber} "
                + $"Destination Account Number: {destinationAccountNumber} " +
-                $"@Amount: {amount:0.00}@Comment: {comment} @Transaction Time: {transactionTimeUtc.ToLocalTime()}";
+                $"@Amount: {amount:0.00}@Comment: {comment} @Transaction Time: {transactionTimeUtc.ToLocalTime()}@";
             }
             else
             {
                 return $"Transaction ID: {transactionId}  Transaction Type: {transactionType} @Account Number: {accountNumber} "
-               + $"@Amount: {amount:0.00}@Comment: {comment} @Transaction Time: {transactionTimeUtc.ToLocalTime()}";
+               + $"@Amount: {amount:0.00}@Comment: {comment} @Transaction Time: {transactionTimeUtc.ToLocalTime()}@";
             }
         }
     }  
