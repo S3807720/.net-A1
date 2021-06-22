@@ -9,6 +9,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 
 public class Menu
 {
@@ -25,7 +26,7 @@ public class Menu
 			Console.WriteLine("Enter Login ID: ");
 			String loginId = Console.ReadLine();
 			Console.WriteLine("Enter Password: ");
-			String password = Console.ReadLine();
+			String password = Utilities.HideCharacter();
 			var logMgr = new LoginManager();
 			var message = "";
 			var id = logMgr.checkLogin(loginId, password, ref message);
@@ -34,6 +35,7 @@ public class Menu
 				Console.WriteLine(message);
 			} else
             {
+				Console.Clear();
 				loginCheck = true;
 				setLogin(id);
             }
@@ -41,6 +43,8 @@ public class Menu
 		DisplayMenu();
 
 	}
+
+
 	private void setLogin(int id)
     {
 		var customers = new CustomerManager().customers;
@@ -49,7 +53,7 @@ public class Menu
 			if (id == customer.customerId)
             {
 				this.loggedIn = customer;
-				Console.WriteLine($"\nWelcome {customer.name}.\n");
+				Console.WriteLine($"Welcome {customer.name}.\n");
             }
         }
     }
