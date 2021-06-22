@@ -21,16 +21,17 @@ namespace MCBA.Managers
 		}
 
 
-		public List<Transaction> getTransactions()
+		public List<Transaction> getTransactions(int accNum)
         {
 			using var connection = new SqlConnection(_connectionString);
 			using var command = connection.CreateCommand();
-			command.CommandText = "select * from [Transaction]";
-
+			command.CommandText = "select * from [Transaction] where AccountNumber = @accNum";
+			command.Parameters.AddWithValue("@accNum", accNum);
 			return command.GetDataTable().Select().Select(X => new Transaction
 			{
 				transactionId = X.Field<int>("TransactionID"),
 				transactionType = X.Field<string>("TransactionType"),
+				accountNumber = accNum,
 				amount = X.Field<decimal>("Amount"),
 				comment = X.Field<string>("Comment"),
 				transactionTimeUtc = X.Field<DateTime>("TransactionTimeUtc")

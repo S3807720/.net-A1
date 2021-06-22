@@ -32,7 +32,7 @@ namespace MCBA.Managers
 				accountType = X.Field<string>("AccountType"),
 				customerId = X.Field<int>("CustomerID"),
 				balance = X.Field<decimal>("Balance"),
-				transactions = transactionsManager.getTransactions()
+				transactions = transactionsManager.getTransactions(X.Field<int>("AccountNumber"))
 			}).ToList();
 		}
 		public void InsertAccount(Account account)

@@ -1,4 +1,5 @@
-﻿using MCBA.Managers;
+﻿using MCBA;
+using MCBA.Managers;
 using MCBA.Models;
 using MiscellaneousUtilities;
 using Newtonsoft.Json;
@@ -13,6 +14,7 @@ public class Menu
 {
 	const string connectionString = "server=rmit.australiaeast.cloudapp.azure.com;" +
 		"uid=s3807720_a1;pwd=abc123";
+	private Account loggedIn = null;
 
 	public Menu()
 	{
@@ -51,20 +53,7 @@ public class Menu
 			try
 			{
 				choice = Convert.ToInt32(input);
-				if (choice == 1)
-                {
-					DataTable table = DisconnectedAccess("Customer");
-					foreach (var x in table.Select())
-					{
-						Console.WriteLine($"{x["Name"]}\n{x["CustomerID"]}\n{x["Address"]},{x["City"]}, {x["PostCode"]}");
-					}
-					table = DisconnectedAccess("[Transaction]");
-					foreach (var x in table.Select())
-					{
-						Console.WriteLine($"{x["TransactionID"]}\n{x["TransactionType"]}\n" +
-							$"{x["AccountNumber"]},{x["Amount"]}, {x["Comment"]}");
-					}
-				}
+				
 				// bit clunky, but a temp? workaround to throw the error msg anyway
 				if (choice > 6)
                 {
@@ -95,7 +84,24 @@ public class Menu
 	}
 	private void GoToMenu(int choice)
     {
-		if (choice == 6)
+		if (choice == 1)
+		{
+			DataTable table = DisconnectedAccess("Customer");
+			foreach (var x in table.Select())
+			{
+				Console.WriteLine($"{x["Name"]}\n{x["CustomerID"]}\n{x["Address"]},{x["City"]}, {x["PostCode"]}");
+			}
+			table = DisconnectedAccess("[Transaction]");
+			foreach (var x in table.Select())
+			{
+				Console.WriteLine($"{x["TransactionID"]}\n{x["TransactionType"]}\n" +
+					$"{x["AccountNumber"]},{x["Amount"]}, {x["Comment"]}");
+			}
+		} else if (choice == 4)
+        {
+			new ViewStatements(loggedIn);
+        }
+		else if (choice == 6)
         {
 			Console.WriteLine("Exiting the application. Thanks for playing!");
 			Environment.Exit(1);
@@ -138,7 +144,6 @@ public class Menu
 					transaction.accountNumber = account.accountNumber;
 					transaction.destinationAccountNumber = account.accountNumber;
 					transaction.transactionType = "D";
-					transaction.transactionId = Utilities.transactionIdCount++;
 					transactionsManager.InsertTransaction(transaction);
                 }
             }
