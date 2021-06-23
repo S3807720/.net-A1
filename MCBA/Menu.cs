@@ -20,9 +20,14 @@ public class Menu
 	{
 		addCustomerDataToDatabase();
 		addLoginDataToDatabase();
+		login();
+	}
+
+	private void login()
+    {
 		bool loginCheck = false;
 		while (loginCheck == false)
-        {
+		{
 			Console.WriteLine("Enter Login ID: ");
 			String loginId = Console.ReadLine();
 			Console.WriteLine("Enter Password: ");
@@ -33,17 +38,16 @@ public class Menu
 			if (id == -1)
 			{
 				Console.WriteLine(message);
-			} else
-            {
+			}
+			else
+			{
 				Console.Clear();
 				loginCheck = true;
 				setLogin(id);
-            }
+			}
 		}
 		DisplayMenu();
-
 	}
-
 
 	private void setLogin(int id)
     {
@@ -90,43 +94,33 @@ public class Menu
 				
 		GoToMenu(choice);
 	}
-	private DataTable DisconnectedAccess(string commandText)
-    {
-		using var connection = new SqlConnection(connectionString);
-		connection.Open();
-		var command = connection.CreateCommand();
-		command.CommandText = $"select * from {commandText}";
 
-		var table = new DataTable();
-		new SqlDataAdapter(command).Fill(table);
-
-		
-		return table;
-	}
 	private void GoToMenu(int choice)
     {
-		if (choice == 1)
-		{
-			DataTable table = DisconnectedAccess("Customer");
-			foreach (var x in table.Select())
-			{
-				Console.WriteLine($"{x["Name"]}\n{x["CustomerID"]}\n{x["Address"]},{x["City"]}, {x["PostCode"]}");
-			}
-			table = DisconnectedAccess("[Transaction]");
-			foreach (var x in table.Select())
-			{
-				Console.WriteLine($"{x["TransactionID"]}\n{x["TransactionType"]}\n" +
-					$"{x["AccountNumber"]},{x["Amount"]}, {x["Comment"]}");
-			}
-		} else if (choice == 4)
+		switch(choice)
         {
-			new ViewStatements(loggedIn);
+			case 1:
+				//deposit();
+				break;
+			case 2:
+				//withdraw();
+				break;
+			case 3:
+				//transfer();
+				break;
+			case 4:
+				new ViewStatements(loggedIn);
+				break;
+			case 5:
+				loggedIn = null;
+				login();
+				break;
+            case 6:
+				Console.WriteLine("Exiting the application. Thanks for playing!");
+				Environment.Exit(1);
+				break;
         }
-		else if (choice == 6)
-        {
-			Console.WriteLine("Exiting the application. Thanks for playing!");
-			Environment.Exit(1);
-        }
+
     }
 
 	private void addCustomerDataToDatabase()
@@ -196,4 +190,19 @@ public class Menu
 			loginManager.InsertLogin(login);
         }
 	}
+
+	private DataTable DisconnectedAccess(string commandText)
+	{
+		using var connection = new SqlConnection(connectionString);
+		connection.Open();
+		var command = connection.CreateCommand();
+		command.CommandText = $"select * from {commandText}";
+
+		var table = new DataTable();
+		new SqlDataAdapter(command).Fill(table);
+
+
+		return table;
+	}
+
 }
