@@ -21,6 +21,11 @@ namespace MCBA.Models
                 balance += transacts.amount;
             }
         }
+        public void addTransaction(Transaction transact)
+        {
+            transactions.Add(transact);
+            setBalance();
+        }
         public override string ToString()
         {
             return $"Account Number: {accountNumber}@AccountType: {accountType}@Balance: {balance}@";

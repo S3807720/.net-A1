@@ -21,7 +21,15 @@ namespace MCBA.Models
             transactionTimeUtc = DateTime.UtcNow;
             transactionType = "D";
         }
-
+        //deposit constructor
+        public Transaction(string type, int accNum, decimal amnt, string com)
+        {
+            transactionType = type;
+            accountNumber = accNum;
+            amount = amnt;
+            comment = com;
+            transactionTimeUtc = DateTime.UtcNow;
+        }
         //return string based on transact type w/ local time conversion
         public override string ToString()
         {

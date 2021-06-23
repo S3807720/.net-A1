@@ -23,7 +23,7 @@ public class Menu
 		login();
 	}
 
-	private void login()
+	private async void login()
     {
 		bool loginCheck = false;
 		while (loginCheck == false)
@@ -97,22 +97,27 @@ public class Menu
 
 	private void GoToMenu(int choice)
     {
-		switch(choice)
+		var a = new AccountManager();
+		switch (choice)
         {
 			case 1:
-				//deposit();
+				a.selectAccount(loggedIn, "Please enter the account number of the account to deposit to.(0 to exit): ",
+					0);
 				break;
 			case 2:
-				//withdraw();
+				a.selectAccount(loggedIn, "Please enter the account number of the account to withdraw from.(0 to exit): ",
+					1);
 				break;
 			case 3:
-				//transfer();
+				a.selectAccount(loggedIn, "Please enter the account number of the account you wish to transfer from.(0 to exit): ",
+					2);
 				break;
 			case 4:
 				new ViewStatements(loggedIn);
 				break;
 			case 5:
 				loggedIn = null;
+				Console.Clear();
 				login();
 				break;
             case 6:
@@ -120,7 +125,7 @@ public class Menu
 				Environment.Exit(1);
 				break;
         }
-
+		return;
     }
 
 	private void addCustomerDataToDatabase()
@@ -189,20 +194,6 @@ public class Menu
 			Console.WriteLine(login.loginId + "\n" + login.customerId + "\n"+ login.passwordHash+"\n");
 			loginManager.InsertLogin(login);
         }
-	}
-
-	private DataTable DisconnectedAccess(string commandText)
-	{
-		using var connection = new SqlConnection(connectionString);
-		connection.Open();
-		var command = connection.CreateCommand();
-		command.CommandText = $"select * from {commandText}";
-
-		var table = new DataTable();
-		new SqlDataAdapter(command).Fill(table);
-
-
-		return table;
 	}
 
 }

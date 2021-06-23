@@ -16,30 +16,6 @@ namespace MCBA.Managers
 
 		public List<Login> logins { get; }
 
-        public int checkLogin(string id, string password, ref string msg)
-        {
-			foreach (Login log in logins)
-            {
-				if (log.loginId.Equals(id))
-				{
-					if (PBKDF2.Verify(log.passwordHash, password))
-                    {
-						msg = "Login successful!";
-						return log.customerId;
-                    } else
-                    {
-						msg = "Invalid password.";
-						return -1;
-                    }
-				}
-				else
-                {
-					msg = "That ID does not exist.";
-                }
-            }
-			return -1;
-        }
-
 		public LoginManager()
         {
 			_connectionString = Utilities.connectionString;
@@ -55,6 +31,31 @@ namespace MCBA.Managers
 				passwordHash = X.Field<string>("PasswordHash")
 			}).ToList();
 
+		}
+
+		public int checkLogin(string id, string password, ref string msg)
+		{
+			foreach (Login log in logins)
+			{
+				if (log.loginId.Equals(id))
+				{
+					if (PBKDF2.Verify(log.passwordHash, password))
+					{
+						msg = "Login successful!";
+						return log.customerId;
+					}
+					else
+					{
+						msg = "Invalid password.";
+						return -1;
+					}
+				}
+				else
+				{
+					msg = "That ID does not exist.";
+				}
+			}
+			return -1;
 		}
 
 		public void InsertLogin(Login login)
