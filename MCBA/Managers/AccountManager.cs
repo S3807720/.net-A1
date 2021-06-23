@@ -1,12 +1,10 @@
 ﻿using MCBA.Models;
 using MiscellaneousUtilities;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Net.Http;
 
 
 namespace MCBA.Managers

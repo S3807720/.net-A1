@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace MCBA.Models
 {
@@ -16,6 +12,7 @@ namespace MCBA.Models
 
         public void setBalance()
         {
+            balance = 0;
             foreach (Transaction transacts in transactions)
             {
                 balance += transacts.amount;
