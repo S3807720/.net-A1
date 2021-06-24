@@ -169,7 +169,7 @@ namespace MCBA.Managers
         {
             if (account.transactionFeeOrNot())
             {
-                Console.WriteLine("You will be charged a service fee of $0.20.");
+                Console.WriteLine("You will be charged a service fee of $0.20. ");
             }
             Account destAcc = getDestinationAccount();
             if (destAcc.accountNumber == account.accountNumber)
