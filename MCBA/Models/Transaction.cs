@@ -47,7 +47,7 @@ namespace MCBA.Models
             if (!(transactionType is "D" or "W") && (transactionType == "T" && destinationAccountNumber != 0))
             {
                 return $"Transaction Type: {transactionType} @Account Number: {accountNumber} "
-               + $"Destination Account Number: {destinationAccountNumber} " +
+               + $"@Destination Account Number: {destinationAccountNumber} " +
                 $"@Amount: {amount:0.00}@Comment: {comment} @Transaction Time: {transactionTimeUtc.ToLocalTime()}@";
             } 
             else

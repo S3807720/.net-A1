@@ -164,7 +164,7 @@ namespace MCBA.Managers
               
             return null;
         }
-
+        //idk why but this is fucking up massively, balance isn't being updated correctly etc..
         private void transferToAccount(Account account)
         {
             if (account.transactionFeeOrNot())

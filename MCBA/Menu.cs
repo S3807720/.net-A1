@@ -65,25 +65,34 @@ public class Menu
 	private void DisplayMenu()
     {
 		int choice = 0;
-		Console.WriteLine($"[1] Deposit\r\n" +
-            $"[2] Withdraw\r\n" +
-            $"[3] Transfer\r\n" +
-            $"[4] My Statement\r\n" +
-            $"[5] Logout\r\n" +
-            $"[6] Exit\r\n" +
-            $"\r\nEnter an option: ");
-		while (choice > 6 || choice < 1)
+		string menu = $"[1] Deposit\r\n" +
+			$"[2] Withdraw\r\n" +
+			$"[3] Transfer\r\n" +
+			$"[4] My Statement\r\n" +
+			$"[5] Logout\r\n" +
+			$"[6] Exit\r\n" +
+			$"\r\nEnter an option: ";
+		bool menuCheck = false;
+		while (menuCheck == false)
         {
+			Console.WriteLine(menu);
 			var input = Console.ReadLine();
 			try
 			{
 				choice = Convert.ToInt32(input);
-				
+				if (choice == 6)
+                {
+					Console.WriteLine("Exiting the application. Thanks for playing!");
+					Environment.Exit(1);
+				}
 				// bit clunky, but a temp? workaround to throw the error msg anyway
-				if (choice > 6)
+				else if (choice > 6 || 1 > choice)
                 {
 					throw new FormatException();
-                }
+                } else
+                {
+					GoToMenu(choice);
+				}
 			}
 			catch (FormatException)
 			{
@@ -92,7 +101,7 @@ public class Menu
 			
 		}
 				
-		GoToMenu(choice);
+		
 	}
 
 	private void GoToMenu(int choice)
@@ -119,10 +128,6 @@ public class Menu
 				loggedIn = null;
 				Console.Clear();
 				login();
-				break;
-            case 6:
-				Console.WriteLine("Exiting the application. Thanks for playing!");
-				Environment.Exit(1);
 				break;
         }
 		return;

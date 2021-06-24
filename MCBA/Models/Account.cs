@@ -16,7 +16,8 @@ namespace MCBA.Models
             foreach (Transaction transacts in transactions)
             {
 
-                if ( (transacts.transactionType == "T" && transacts.destinationAccountNumber != 0) || transacts.transactionType == "S")
+                if ( (transacts.transactionType == "T" && transacts.destinationAccountNumber != 0) || transacts.transactionType == "S"
+                    || transacts.transactionType == "W")
                 {
                     balance -= transacts.amount;
                 } else
