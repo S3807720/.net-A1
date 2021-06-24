@@ -79,7 +79,7 @@ namespace MCBA
                 menu += "\nE. Back.";
 
                 //if transaction count is lower than the maximum page amount, change end to that
-                if (end > transactions.Count) end = transactions.Count;
+                end = end > transactions.Count ? end = transactions.Count : end + 1;
                 Console.WriteLine($"{start + 1}-{end} of {transactions.Count}\n{menu}");
                 var input = Console.ReadLine().ToUpper();
                 //enable page functions based on amount of transactions and what page the user is on

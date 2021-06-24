@@ -102,15 +102,15 @@ public class Menu
         {
 			case 1:
 				a.selectAccount(loggedIn, "Please enter the account number of the account to deposit to.(0 to exit): ",
-					0);
+					TransactionTypes.Deposit);
 				break;
 			case 2:
 				a.selectAccount(loggedIn, "Please enter the account number of the account to withdraw from.(0 to exit): ",
-					1);
+					TransactionTypes.Withdraw);
 				break;
 			case 3:
 				a.selectAccount(loggedIn, "Please enter the account number of the account you wish to transfer from.(0 to exit): ",
-					2);
+					TransactionTypes.TransferOut);
 				break;
 			case 4:
 				new ViewStatements(loggedIn);
@@ -191,7 +191,6 @@ public class Menu
 		});
 		foreach(var login in logins)
         {
-			Console.WriteLine(login.loginId + "\n" + login.customerId + "\n"+ login.passwordHash+"\n");
 			loginManager.InsertLogin(login);
         }
 	}

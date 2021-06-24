@@ -17,6 +17,16 @@ namespace MCBA.Models
         public string comment { get; set;  }
         public DateTime transactionTimeUtc { get; set; }
 
+        //transfer constructor
+        public Transaction(string type, int accNum, int destinationAcc, decimal amnt, string com)
+        {
+            transactionType = type;
+            accountNumber = accNum;
+            destinationAccountNumber = destinationAcc;
+            amount = amnt;
+            comment = com;
+            transactionTimeUtc = DateTime.UtcNow;
+        }
         public Transaction() {
             transactionTimeUtc = DateTime.UtcNow;
             transactionType = "D";
@@ -28,20 +38,21 @@ namespace MCBA.Models
             accountNumber = accNum;
             amount = amnt;
             comment = com;
+            destinationAccountNumber = 0;
             transactionTimeUtc = DateTime.UtcNow;
         }
         //return string based on transact type w/ local time conversion
         public override string ToString()
         {
-            if (transactionType != "D")
+            if (!(transactionType is "D" or "W") && (transactionType == "T" && destinationAccountNumber != 0))
             {
-                return $"Transaction ID: {transactionId}  Transaction Type: {transactionType} @Account Number: {accountNumber} "
+                return $"Transaction Type: {transactionType} @Account Number: {accountNumber} "
                + $"Destination Account Number: {destinationAccountNumber} " +
                 $"@Amount: {amount:0.00}@Comment: {comment} @Transaction Time: {transactionTimeUtc.ToLocalTime()}@";
-            }
+            } 
             else
             {
-                return $"Transaction ID: {transactionId}  Transaction Type: {transactionType} @Account Number: {accountNumber} "
+                return $"Transaction Type: {transactionType} @Account Number: {accountNumber} "
                + $"@Amount: {amount:0.00}@Comment: {comment} @Transaction Time: {transactionTimeUtc.ToLocalTime()}@";
             }
         }
