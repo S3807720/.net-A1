@@ -12,13 +12,13 @@ namespace MCBA.Models
         public int transactionId { get; set; }
         public string transactionType { get; set; }
         public int accountNumber { get; set; }
-        public int destinationAccountNumber { get; set; }
+        public int? destinationAccountNumber { get; set; }
         public decimal amount { get; set; }
         public string comment { get; set;  }
         public DateTime transactionTimeUtc { get; set; }
 
         //transfer constructor
-        public Transaction(string type, int accNum, int destinationAcc, decimal amnt, string com)
+        public Transaction(string type, int accNum, int? destinationAcc, decimal amnt, string com)
         {
             transactionType = type;
             accountNumber = accNum;
@@ -29,6 +29,7 @@ namespace MCBA.Models
         }
         public Transaction() {
             transactionTimeUtc = DateTime.UtcNow;
+            destinationAccountNumber = null;
             transactionType = "D";
         }
         //deposit constructor
@@ -38,21 +39,30 @@ namespace MCBA.Models
             accountNumber = accNum;
             amount = amnt;
             comment = com;
-            destinationAccountNumber = 0;
+            destinationAccountNumber = null;
             transactionTimeUtc = DateTime.UtcNow;
         }
         //return string based on transact type w/ local time conversion
         public override string ToString()
         {
-            if (!(transactionType is "D" or "W") && (transactionType == "T" && destinationAccountNumber != 0))
+            string type = "";
+            switch(transactionType)
             {
-                return $"Transaction Type: {transactionType} @Account Number: {accountNumber} "
+                case "D": type = "Deposit"; break;
+                case "S": type = "Service Fee"; break;
+                case "T": type = "Transfer"; break;
+                case "W": type = "Withdraw"; break;
+
+            }
+            if (!(destinationAccountNumber is null))
+            {
+                return $"Transaction Type: {type} @Account Number: {accountNumber} "
                + $"@Destination Account Number: {destinationAccountNumber} " +
                 $"@Amount: {amount:0.00}@Comment: {comment} @Transaction Time: {transactionTimeUtc.ToLocalTime()}@";
             } 
             else
             {
-                return $"Transaction Type: {transactionType} @Account Number: {accountNumber} "
+                return $"Transaction Type: {type} @Account Number: {accountNumber} "
                + $"@Amount: {amount:0.00}@Comment: {comment} @Transaction Time: {transactionTimeUtc.ToLocalTime()}@";
             }
         }

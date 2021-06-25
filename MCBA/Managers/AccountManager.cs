@@ -33,9 +33,9 @@ namespace MCBA.Managers
             {
                 accountNumber = X.Field<int>("AccountNumber"),
                 accountType = X.Field<string>("AccountType"),
-                customerId = X.Field<int>("CustomerID"),
-                balance = X.Field<decimal>("Balance"),
-                transactions = transactionsManager.getTransactions(X.Field<int>("AccountNumber"))
+                customerId = X.Field<int>("CustomerID"),                
+                transactions = transactionsManager.getTransactions(X.Field<int>("AccountNumber")),
+                balance = X.Field<decimal>("Balance")
             }).ToList();
         }
         public void InsertAccount(Account account)
@@ -50,9 +50,25 @@ namespace MCBA.Managers
             command.Parameters.AddWithValue("accountType", account.accountType);
             command.Parameters.AddWithValue("customerId", account.customerId);
             command.Parameters.AddWithValue("balance", account.balance);
+            
             command.ExecuteNonQuery();
 
         }
+
+        public void updateAccountBalance(Account account)
+        {
+            account.setBalance();
+            using var connection = new SqlConnection(_connectionString);
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = $"UPDATE Account SET Balance = @balance WHERE AccountNumber = @AccountID";
+            command.Parameters.AddWithValue("@balance", account.balance);
+            command.Parameters.AddWithValue("@AccountID", account.accountNumber);
+            command.ExecuteNonQuery();
+
+        }
+
         public void selectAccount(Customer cust, String message, TransactionTypes transactionType)
         {
             List<Account> acc = cust.accounts;
@@ -62,6 +78,7 @@ namespace MCBA.Managers
                 Console.WriteLine(message);
                 foreach (Account ac in acc)
                 {
+                    ac.setBalance();
                     Console.WriteLine(ac.ToString().Replace("@", Environment.NewLine));
                 }
                             
@@ -95,6 +112,7 @@ namespace MCBA.Managers
                                 transferToAccount(ac);
                             }
                             found = true;
+                            check = true;
                         }
                     }
                     //no account, throw exception to print error 
@@ -132,6 +150,7 @@ namespace MCBA.Managers
             Console.WriteLine("Enter the account number of the account to transfer to(0 to exit): ");
             var input = Console.ReadLine();
             bool menuCheck = false;
+            bool found = false;
             while (menuCheck == false)
             {
                 try
@@ -150,21 +169,32 @@ namespace MCBA.Managers
                         {
                             if (account.accountNumber == accountNum)
                             {
+                                customer.accounts.Remove(account);
                                 menuCheck = true;
+                                found = true;
                                 return account;
                             }
                         }
+                    }
+                    //no account, throw exception to print error 
+                    if (found == false)
+                    {
+                        throw new Exception("That account does not exist.");
                     }
                 }
                 catch (FormatException)
                 {
                     Console.WriteLine("Please enter a valid whole number.");
                 }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
             }
               
             return null;
         }
-        //idk why but this is fucking up massively, balance isn't being updated correctly etc..
+        
         private void transferToAccount(Account account)
         {
             if (account.transactionFeeOrNot())
@@ -196,6 +226,8 @@ namespace MCBA.Managers
             {
                 addTransaction(account, new Transaction("S", account.accountNumber, TRANSFER_FEE, "Transfer fee of $0.20."));
             }
+            Console.WriteLine("Transaction successfully processed.");
+            
         }
 
         private void withdrawToAccount(Account account)
@@ -215,6 +247,7 @@ namespace MCBA.Managers
             {
                 addTransaction(account, new Transaction("S", account.accountNumber, WITHDRAWAL_FEE, "Withdrawal fee of $0.10."));
             }
+            Console.WriteLine("Transaction successfully processed.");
         }
 
         private void depositToAccount(Account account)
@@ -227,49 +260,17 @@ namespace MCBA.Managers
             }
             var comment = getComment("Enter a comment for your deposit(blank to skip): ");
             addTransaction(account, new Transaction("D", account.accountNumber, money, comment));
+            Console.WriteLine("Transaction successfully processed.");
         }
 
 
         private void addTransaction(Account account, Transaction transaction)
         {
-            account.addTransaction(transaction);
-            using var connection = new SqlConnection(Utilities.connectionString);
-            try { 
-                connection.Open();
-                var command = connection.CreateCommand();
-                command.CommandText = $"INSERT INTO [Transaction](TransactionType, AccountNumber, DestinationAccountNumber, Amount, Comment,TransactionTimeUtc) " +
-                       $"VALUES(@TransactionType, @AccountNumber, @DestinationAccountNumber, @Amount, @Comment, @TransactionTimeUtc)";
-                command.Parameters.AddWithValue("@TransactionType", transaction.transactionType);
-                command.Parameters.AddWithValue("@AccountNumber", transaction.accountNumber);
-                command.Parameters.AddWithValue("@Amount", transaction.amount);
-                command.Parameters.AddWithValue("@Comment", transaction.comment);
-                command.Parameters.AddWithValue("@TransactionTimeUtc", transaction.transactionTimeUtc);
-                
-                if (transaction.transactionType == "T" && transaction.destinationAccountNumber != 0)
-                {
-                    command.Parameters.AddWithValue("@DestinationAccountNumber", transaction.destinationAccountNumber);
-                } else
-                {
-                    command.Parameters.AddWithValue("@DestinationAccountNumber", DBNull.Value);
-                }
-                int success = command.ExecuteNonQuery();
-                if (success > 0)
-                {
-                    Console.WriteLine(transaction.ToString().Replace("@", Environment.NewLine));
-                    var updateAcc = connection.CreateCommand();
-                    command.CommandText = $"UPDATE Account SET Balance = @balance WHERE AccountNumber = @AccountID";
-                    command.Parameters.AddWithValue("@balance", account.balance);
-                    command.Parameters.AddWithValue("@AccountID", account.accountNumber);
-                    command.ExecuteNonQuery();
-                }
-                else
-                {
-                    throw new Exception("Transaction could not be processed.");
-                }
-            }catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
+            var ts = new TransactionsManager();
+            ts.InsertTransaction(transaction);
+            account.setBalance();
+            updateAccountBalance(account);
+            Menu.updateLogin();
         }
 
         private decimal getMoney(string message)

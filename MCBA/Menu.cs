@@ -13,9 +13,20 @@ using System.Text;
 
 public class Menu
 {
-	private string connectionString = Utilities.connectionString;
-	private Customer loggedIn = null;
+	static Customer loggedIn = null;
 
+	public static void updateLogin()
+    {
+		int id = loggedIn.customerId;
+		var cs = new CustomerManager();
+		foreach(Customer cust in cs.customers)
+        {
+			if (cust.customerId == id)
+            {
+				loggedIn = cust;
+            }
+        }
+    }
 	public Menu()
 	{
 		addCustomerDataToDatabase();
@@ -56,7 +67,7 @@ public class Menu
         {
 			if (id == customer.customerId)
             {
-				this.loggedIn = customer;
+				loggedIn = customer;
 				Console.WriteLine($"Welcome {customer.name}.\n");
             }
         }
@@ -167,7 +178,7 @@ public class Menu
 				foreach(var transaction in account.transactions)
                 {
 					transaction.accountNumber = account.accountNumber;
-					transaction.destinationAccountNumber = account.accountNumber;
+					transaction.destinationAccountNumber = transaction.destinationAccountNumber;
 					transaction.transactionType = "D";
 					transactionsManager.InsertTransaction(transaction);
                 }

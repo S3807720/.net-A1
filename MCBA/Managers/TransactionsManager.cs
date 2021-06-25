@@ -31,6 +31,7 @@ namespace MCBA.Managers
 			{
 				transactionId = X.Field<int>("TransactionID"),
 				transactionType = X.Field<string>("TransactionType"),
+				destinationAccountNumber = X.Field<int?>("DestinationAccountNumber").Equals(DBNull.Value) ? null : X.Field<int?>("DestinationAccountNumber"),
 				accountNumber = accNum,
 				amount = X.Field<decimal>("Amount"),
 				comment = X.Field<string>("Comment"),
@@ -49,7 +50,14 @@ namespace MCBA.Managers
 				"@destinationAccountNumber, @amount, @comment, @transactionTimeUtc)";
 			command.Parameters.AddWithValue("transactionType", transaction.transactionType);
 			command.Parameters.AddWithValue("accountNumber", transaction.accountNumber);
-			command.Parameters.AddWithValue("destinationAccountNumber", transaction.destinationAccountNumber);
+			if (transaction.destinationAccountNumber != null)
+			{
+				command.Parameters.AddWithValue("@DestinationAccountNumber", transaction.destinationAccountNumber);
+			}
+			else
+			{
+				command.Parameters.AddWithValue("@DestinationAccountNumber", DBNull.Value);
+			}
 			command.Parameters.AddWithValue("amount", transaction.amount);
 			command.Parameters.AddWithValue("comment", (transaction.comment == null) ? DBNull.Value : transaction.comment);
 			command.Parameters.AddWithValue("transactionTimeUtc", transaction.transactionTimeUtc);
