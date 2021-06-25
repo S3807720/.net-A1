@@ -1,0 +1,2 @@
+AccountManage line 81~
+By using the async method, able to print the accounts out while starting the next function. Minimal improvement in this context, but if there were more accounts or customers it could speed it up tremendously.

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-
+using System.Threading.Tasks;
 
 namespace MCBA.Managers
 {
@@ -76,6 +76,7 @@ namespace MCBA.Managers
             while (check == false)
             {
                 Console.WriteLine(message);
+                
                 foreach (Account ac in acc)
                 {
                     ac.setBalance();
@@ -194,7 +195,7 @@ namespace MCBA.Managers
               
             return null;
         }
-        
+
         private void transferToAccount(Account account)
         {
             if (account.transactionFeeOrNot())
@@ -218,14 +219,19 @@ namespace MCBA.Managers
                 return;
             }
             var comment = getComment("Enter a comment for your withdrawal(blank to skip): ");
-            //sender
-            addTransaction(account, new Transaction("T", account.accountNumber, destAcc.accountNumber, money, comment));
-            //receiver
-            addTransaction(destAcc, new Transaction("T", destAcc.accountNumber, money, comment));
-            if (account.transactionFeeOrNot())
+            var tasks = new Task[]
             {
-                addTransaction(account, new Transaction("S", account.accountNumber, TRANSFER_FEE, "Transfer fee of $0.20."));
-            }
+                //sender
+                addTransaction(account, new Transaction("T", account.accountNumber, destAcc.accountNumber, money, comment)),
+                //receiver
+                addTransaction(destAcc, new Transaction("T", destAcc.accountNumber, money, comment)),
+                account.transactionFeeOrNot()? addTransaction(account, new Transaction("S", account.accountNumber, TRANSFER_FEE, "Transfer fee of $0.20.")) : null
+            };
+
+           // if (account.transactionFeeOrNot())
+           // {
+           //     addTransaction(account, new Transaction("S", account.accountNumber, TRANSFER_FEE, "Transfer fee of $0.20."));
+           // }
             Console.WriteLine("Transaction successfully processed.");
             
         }
@@ -242,11 +248,18 @@ namespace MCBA.Managers
                 return;
             }
             var comment = getComment("Enter a comment for your withdrawal(blank to skip): ");
-            addTransaction(account, new Transaction("W", account.accountNumber, money, comment));
-            if (account.transactionFeeOrNot())
+
+            var tasks = new Task[]
             {
-                addTransaction(account, new Transaction("S", account.accountNumber, WITHDRAWAL_FEE, "Withdrawal fee of $0.10."));
-            }
+                addTransaction(account, new Transaction("W", account.accountNumber, money, comment)),
+                account.transactionFeeOrNot()? addTransaction(account, new Transaction("S", account.accountNumber, WITHDRAWAL_FEE, "Withdrawal fee of $0.10.")) : null
+            };
+
+         //   addTransaction(account, new Transaction("W", account.accountNumber, money, comment));
+       //     if (account.transactionFeeOrNot())
+       //     {
+             //   addTransaction(account, new Transaction("S", account.accountNumber, WITHDRAWAL_FEE, "Withdrawal fee of $0.10."));
+         //   }
             Console.WriteLine("Transaction successfully processed.");
         }
 
@@ -259,18 +272,19 @@ namespace MCBA.Managers
                 return;
             }
             var comment = getComment("Enter a comment for your deposit(blank to skip): ");
-            addTransaction(account, new Transaction("D", account.accountNumber, money, comment));
+            _ = addTransaction(account, new Transaction("D", account.accountNumber, money, comment));
             Console.WriteLine("Transaction successfully processed.");
         }
 
 
-        private void addTransaction(Account account, Transaction transaction)
+        private async Task addTransaction(Account account, Transaction transaction)
         {
             var ts = new TransactionsManager();
             ts.InsertTransaction(transaction);
             account.setBalance();
             updateAccountBalance(account);
             Menu.updateLogin();
+            Console.WriteLine(transaction);
         }
 
         private decimal getMoney(string message)
