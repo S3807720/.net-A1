@@ -10,6 +10,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 
 public class Menu
 {
@@ -34,7 +35,7 @@ public class Menu
 		login();
 	}
 
-	private async void login()
+	private void login()
     {
 		bool loginCheck = false;
 		while (loginCheck == false)
