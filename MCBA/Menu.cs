@@ -17,7 +17,7 @@ public class Menu
     static Customer loggedIn = null;
     private HashSet<DatabaseObserver> _observers = new HashSet<DatabaseObserver>();
     private AccountManager accountManager = new AccountManager();
-
+    private DatabaseObserver dbObs = new DatabaseObserver();
 
     public static void UpdateLogin()
     {
@@ -62,7 +62,6 @@ public class Menu
             }
         }
         //register observer
-        var dbObs = new DatabaseObserver();
         Register(dbObs);
         accountManager.register(dbObs);
         DisplayMenu();
