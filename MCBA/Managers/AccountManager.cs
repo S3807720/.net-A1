@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-
+using System.Threading.Tasks;
 
 namespace MCBA.Managers
 {
@@ -15,6 +15,7 @@ namespace MCBA.Managers
         private const decimal TRANSFER_FEE = 0.20M;
         private const decimal MINIMUM_CHECKINGS_FUNDS = 200;
         private readonly string _connectionString;
+        private HashSet<DatabaseObserver> _observers = new HashSet<DatabaseObserver>();
 
         public AccountManager()
         {
@@ -33,7 +34,7 @@ namespace MCBA.Managers
             {
                 accountNumber = X.Field<int>("AccountNumber"),
                 accountType = X.Field<string>("AccountType"),
-                customerId = X.Field<int>("CustomerID"),                
+                customerId = X.Field<int>("CustomerID"),
                 transactions = transactionsManager.getTransactions(X.Field<int>("AccountNumber")),
                 balance = X.Field<decimal>("Balance")
             }).ToList();
@@ -50,24 +51,12 @@ namespace MCBA.Managers
             command.Parameters.AddWithValue("accountType", account.accountType);
             command.Parameters.AddWithValue("customerId", account.customerId);
             command.Parameters.AddWithValue("balance", account.balance);
-            
+
             command.ExecuteNonQuery();
 
         }
 
-        public void updateAccountBalance(Account account)
-        {
-            account.setBalance();
-            using var connection = new SqlConnection(_connectionString);
-            connection.Open();
 
-            using var command = connection.CreateCommand();
-            command.CommandText = $"UPDATE Account SET Balance = @balance WHERE AccountNumber = @AccountID";
-            command.Parameters.AddWithValue("@balance", account.balance);
-            command.Parameters.AddWithValue("@AccountID", account.accountNumber);
-            command.ExecuteNonQuery();
-
-        }
 
         public void selectAccount(Customer cust, String message, TransactionTypes transactionType)
         {
@@ -76,12 +65,13 @@ namespace MCBA.Managers
             while (check == false)
             {
                 Console.WriteLine(message);
+
                 foreach (Account ac in acc)
                 {
                     ac.setBalance();
                     Console.WriteLine(ac.ToString().Replace("@", Environment.NewLine));
                 }
-                            
+
 
                 var input = Console.ReadLine();
                 try
@@ -127,7 +117,7 @@ namespace MCBA.Managers
                 }
             }
         }
-       
+
         private bool checkAccountBalance(Account account, decimal money)
         {
             if (money > account.balance || (account.accountType == "C" && MINIMUM_CHECKINGS_FUNDS > account.balance - money))
@@ -144,7 +134,7 @@ namespace MCBA.Managers
                 return true;
             }
         }
-        
+
         private Account getDestinationAccount()
         {
             Console.WriteLine("Enter the account number of the account to transfer to(0 to exit): ");
@@ -191,10 +181,10 @@ namespace MCBA.Managers
                     Console.WriteLine(e.Message);
                 }
             }
-              
+
             return null;
         }
-        
+
         private void transferToAccount(Account account)
         {
             if (account.transactionFeeOrNot())
@@ -218,16 +208,21 @@ namespace MCBA.Managers
                 return;
             }
             var comment = getComment("Enter a comment for your withdrawal(blank to skip): ");
-            //sender
-            addTransaction(account, new Transaction("T", account.accountNumber, destAcc.accountNumber, money, comment));
-            //receiver
-            addTransaction(destAcc, new Transaction("T", destAcc.accountNumber, money, comment));
-            if (account.transactionFeeOrNot())
+            var tasks = new Task[]
             {
-                addTransaction(account, new Transaction("S", account.accountNumber, TRANSFER_FEE, "Transfer fee of $0.20."));
-            }
+                //sender
+                addTransaction(account, new Transaction("T", account.accountNumber, destAcc.accountNumber, money, comment)),
+                //receiver
+                addTransaction(destAcc, new Transaction("T", destAcc.accountNumber, money, comment)),
+                account.transactionFeeOrNot()? addTransaction(account, new Transaction("S", account.accountNumber, TRANSFER_FEE, "Transfer fee of $0.20.")) : null
+            };
+
+            // if (account.transactionFeeOrNot())
+            // {
+            //     addTransaction(account, new Transaction("S", account.accountNumber, TRANSFER_FEE, "Transfer fee of $0.20."));
+            // }
             Console.WriteLine("Transaction successfully processed.");
-            
+
         }
 
         private void withdrawToAccount(Account account)
@@ -242,11 +237,18 @@ namespace MCBA.Managers
                 return;
             }
             var comment = getComment("Enter a comment for your withdrawal(blank to skip): ");
-            addTransaction(account, new Transaction("W", account.accountNumber, money, comment));
-            if (account.transactionFeeOrNot())
+
+            var tasks = new Task[]
             {
-                addTransaction(account, new Transaction("S", account.accountNumber, WITHDRAWAL_FEE, "Withdrawal fee of $0.10."));
-            }
+                addTransaction(account, new Transaction("W", account.accountNumber, money, comment)),
+                account.transactionFeeOrNot()? addTransaction(account, new Transaction("S", account.accountNumber, WITHDRAWAL_FEE, "Withdrawal fee of $0.10.")) : null
+            };
+
+            //   addTransaction(account, new Transaction("W", account.accountNumber, money, comment));
+            //     if (account.transactionFeeOrNot())
+            //     {
+            //   addTransaction(account, new Transaction("S", account.accountNumber, WITHDRAWAL_FEE, "Withdrawal fee of $0.10."));
+            //   }
             Console.WriteLine("Transaction successfully processed.");
         }
 
@@ -259,18 +261,13 @@ namespace MCBA.Managers
                 return;
             }
             var comment = getComment("Enter a comment for your deposit(blank to skip): ");
-            addTransaction(account, new Transaction("D", account.accountNumber, money, comment));
+            _ = addTransaction(account, new Transaction("D", account.accountNumber, money, comment));
             Console.WriteLine("Transaction successfully processed.");
         }
-
-
-        private void addTransaction(Account account, Transaction transaction)
+    
+        private async Task addTransaction(Account account, Transaction transaction)
         {
-            var ts = new TransactionsManager();
-            ts.InsertTransaction(transaction);
-            account.setBalance();
-            updateAccountBalance(account);
-            Menu.updateLogin();
+            notify(account, transaction);
         }
 
         private decimal getMoney(string message)
@@ -310,6 +307,21 @@ namespace MCBA.Managers
             var comment = Console.ReadLine();
             Console.WriteLine();
             return comment;
+        }
+
+        //observer stuff
+        public void register(DatabaseObserver observer)
+        {
+            _observers.Add(observer);
+        }
+        public void unRegister(DatabaseObserver observer)
+        {
+            _observers.Remove(observer);
+        }
+        public void notify(Account account, Transaction transaction)
+        {
+            _observers.ToList().ForEach(o => o.AddTransaction(transaction));
+            _observers.ToList().ForEach(o => o.UpdateAccount(account));
         }
 
     }

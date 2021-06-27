@@ -38,33 +38,7 @@ namespace MCBA.Managers
 				transactionTimeUtc = X.Field<DateTime>("TransactionTimeUtc")
 			}).ToList();
 		}
-		public void InsertTransaction(Transaction transaction)
-		{
-			using var connection = new SqlConnection(_connectionString);
-			connection.Open();
-
-			using var command = connection.CreateCommand();
-			command.CommandText =
-				"insert into [Transaction] (TransactionType, AccountNumber, DestinationAccountNumber," +
-				"Amount, Comment, TransactionTimeUtc) values (@transactionType, @accountNumber, " +
-				"@destinationAccountNumber, @amount, @comment, @transactionTimeUtc)";
-			command.Parameters.AddWithValue("transactionType", transaction.transactionType);
-			command.Parameters.AddWithValue("accountNumber", transaction.accountNumber);
-			if (transaction.destinationAccountNumber != null)
-			{
-				command.Parameters.AddWithValue("@DestinationAccountNumber", transaction.destinationAccountNumber);
-			}
-			else
-			{
-				command.Parameters.AddWithValue("@DestinationAccountNumber", DBNull.Value);
-			}
-			command.Parameters.AddWithValue("amount", transaction.amount);
-			command.Parameters.AddWithValue("comment", (transaction.comment == null) ? DBNull.Value : transaction.comment);
-			command.Parameters.AddWithValue("transactionTimeUtc", transaction.transactionTimeUtc);
-
-			command.ExecuteNonQuery();
-
-		}
+		
 	}
 
 }
