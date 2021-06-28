@@ -21,7 +21,7 @@ namespace MCBA.Managers
 		}
 
 
-		public List<Transaction> getTransactions(int accNum)
+		public List<Transaction> GetTransactions(int accNum)
         {
 			using var connection = new SqlConnection(_connectionString);
 			using var command = connection.CreateCommand();

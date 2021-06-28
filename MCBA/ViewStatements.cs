@@ -32,7 +32,7 @@ namespace MCBA
                     {
                         if (acc.accountNumber.Equals(choice))
                         {
-                            viewStatement(acc);
+                            ViewStatement(acc);
                             found = true;
                         }
                     }
@@ -50,7 +50,7 @@ namespace MCBA
             
         }
 
-        private void viewStatement(Account account)
+        private void ViewStatement(Account account)
         {
             var transactions = account.transactions;
             var start = 0;
@@ -59,6 +59,7 @@ namespace MCBA
             Console.WriteLine($"Account #{account.accountNumber} has a balance of ${account.balance}.");
             while (menuChoice == false)
             {
+                Console.Clear();
                 for (int i = start; transactions.Count > end ? end >= i : transactions.Count > i; i++)
                 {
                     //print each transaction for the account
@@ -68,7 +69,7 @@ namespace MCBA
 
                 //show menu options based on transactions displayed
                 var menu = "";
-                if (transactions.Count > end)
+                if (transactions.Count > end+1)
                 {
                     menu += "Q. Next page";
                 }
@@ -79,25 +80,27 @@ namespace MCBA
                 menu += "\nE. Back.";
 
                 //if transaction count is lower than the maximum page amount, change end to that
-                end = end > transactions.Count ? end = transactions.Count : end;
+                end = end >= transactions.Count ? end = transactions.Count-1 : end;
                 Console.WriteLine($"{start + 1}-{end+1} of {transactions.Count}\n{menu}");
                 var input = Console.ReadLine().ToUpper();
                 //enable page functions based on amount of transactions and what page the user is on
                 if (transactions.Count > 3)
                 {
-                    if (input == "Q")
+                    //if start is 1, end will be 4 etc...
+                    if (input == "Q" && end + 1 != transactions.Count)
                     {
                         start += 4;
-                        end += 4;
+                        end = start+3;
                     }
                     else if (input == "W" && start > 3)
                     {
                         start -= 4;
-                        end -= 4;
+                        end = start+3;
                     }
-                } else if (input == "E")
+                } if (input == "E")
                 {
                     menuChoice = true;
+                    break;
                 } else
                 {
                     Console.WriteLine($"{input} is not a menu option.");

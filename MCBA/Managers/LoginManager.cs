@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Net.Http;
 using SimpleHashing;
+using System.Threading.Tasks;
 
 namespace MCBA.Managers
 {
@@ -33,7 +34,7 @@ namespace MCBA.Managers
 
 		}
 
-		public int checkLogin(string id, string password, ref string msg)
+		public int CheckLogin(string id, string password, ref string msg)
 		{
 			foreach (Login log in logins)
 			{
@@ -58,10 +59,10 @@ namespace MCBA.Managers
 			return -1;
 		}
 
-		public void InsertLogin(Login login)
+		public async Task<int> InsertLogin(Login login)
 		{
 			using var connection = new SqlConnection(_connectionString);
-			connection.Open();
+			await connection.OpenAsync();
 
 			using var command = connection.CreateCommand();
 			command.CommandText =
@@ -70,7 +71,8 @@ namespace MCBA.Managers
 			command.Parameters.AddWithValue("customerId", login.customerId);
 			command.Parameters.AddWithValue("password", login.passwordHash);
 
-			command.ExecuteNonQuery();
+			await command .ExecuteNonQueryAsync();
+			return 1;
 
 		}
 	}

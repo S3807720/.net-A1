@@ -19,10 +19,10 @@ namespace MCBA.Managers
 
         public AccountManager()
         {
-            _connectionString = Utilities.connectionString; ;
+            _connectionString = Utilities.connectionString; 
         }
 
-        public List<Account> getAccounts(int customerID)
+        public List<Account> GetAccounts(int customerID)
         {
             using var connection = new SqlConnection(_connectionString);
             using var command = connection.CreateCommand();
@@ -35,14 +35,14 @@ namespace MCBA.Managers
                 accountNumber = X.Field<int>("AccountNumber"),
                 accountType = X.Field<string>("AccountType"),
                 customerId = X.Field<int>("CustomerID"),
-                transactions = transactionsManager.getTransactions(X.Field<int>("AccountNumber")),
+                transactions = transactionsManager.GetTransactions(X.Field<int>("AccountNumber")),
                 balance = X.Field<decimal>("Balance")
             }).ToList();
         }
-        public void InsertAccount(Account account)
+        public async Task<int> InsertAccount(Account account)
         {
             using var connection = new SqlConnection(_connectionString);
-            connection.Open();
+            await connection.OpenAsync();
 
             using var command = connection.CreateCommand();
             command.CommandText =
@@ -52,13 +52,13 @@ namespace MCBA.Managers
             command.Parameters.AddWithValue("customerId", account.customerId);
             command.Parameters.AddWithValue("balance", account.balance);
 
-            command.ExecuteNonQuery();
-
+            await command.ExecuteNonQueryAsync();
+            return 1;
         }
 
 
 
-        public void selectAccount(Customer cust, String message, TransactionTypes transactionType)
+        public void SelectAccount(Customer cust, String message, TransactionTypes transactionType)
         {
             List<Account> acc = cust.accounts;
             bool check = false;
@@ -68,7 +68,7 @@ namespace MCBA.Managers
 
                 foreach (Account ac in acc)
                 {
-                    ac.setBalance();
+                    ac.SetBalance();
                     Console.WriteLine(ac.ToString().Replace("@", Environment.NewLine));
                 }
 
@@ -91,15 +91,15 @@ namespace MCBA.Managers
                         {
                             if (transactionType == TransactionTypes.Deposit)
                             {
-                                depositToAccount(ac);
+                                DepositToAccount(ac);
                             }
                             else if (transactionType == TransactionTypes.Withdraw)
                             {
-                                withdrawToAccount(ac);
+                                WithdrawToAccount(ac);
                             }
                             else
                             {
-                                transferToAccount(ac);
+                                TransferToAccount(ac);
                             }
                             found = true;
                             check = true;
@@ -118,33 +118,34 @@ namespace MCBA.Managers
             }
         }
 
-        private bool checkAccountBalance(Account account, decimal money)
+        private bool CheckAccountBalance(Account account, decimal money)
         {
             if (money > account.balance || (account.accountType == "C" && MINIMUM_CHECKINGS_FUNDS > account.balance - money))
             {
                 Console.WriteLine("You do not have enough money in your account to withdraw that much.");
                 return false;
-            }
+            } 
             else if (money == 0)
             {
                 Console.WriteLine("Deposit cancelled.");
                 return false;
-            } else
+            }
+            else
             {
                 return true;
             }
         }
 
-        private Account getDestinationAccount()
+        private Account GetDestinationAccount()
         {
             Console.WriteLine("Enter the account number of the account to transfer to(0 to exit): ");
-            var input = Console.ReadLine();
             bool menuCheck = false;
             bool found = false;
             while (menuCheck == false)
             {
                 try
                 {
+                    var input = Console.ReadLine();
                     var accountNum = Convert.ToInt32(input);
                     if (accountNum == 0)
                     {
@@ -174,7 +175,7 @@ namespace MCBA.Managers
                 }
                 catch (FormatException)
                 {
-                    Console.WriteLine("Please enter a valid whole number.");
+                    Console.WriteLine("Account numbers can only be numeric, no letters or special characters!");
                 }
                 catch (Exception e)
                 {
@@ -184,14 +185,14 @@ namespace MCBA.Managers
 
             return null;
         }
-
-        private void transferToAccount(Account account)
+        //transfer function, similar to withdraw, but with a destination account & more error checks
+        private void TransferToAccount(Account account)
         {
-            if (account.transactionFeeOrNot())
+            if (account.TransactionFeeOrNot())
             {
                 Console.WriteLine("You will be charged a service fee of $0.20.");
             }
-            Account destAcc = getDestinationAccount();
+            Account destAcc = GetDestinationAccount();
             if (destAcc.accountNumber == account.accountNumber)
             {
                 Console.WriteLine("You cannot transfer to the same account.");
@@ -202,75 +203,67 @@ namespace MCBA.Managers
                 Console.WriteLine("Returning to menu..");
                 return;
             }
-            var money = getMoney($"Enter an amount to transfer from Account #{account.accountNumber} to account #{destAcc.accountNumber}(0 to exit).");
-            if (!checkAccountBalance(account, money))
+            var money = GetMoney($"Enter an amount to transfer from Account #{account.accountNumber} to account #{destAcc.accountNumber}(0 to exit).");
+            if (!CheckAccountBalance(account, account.TransactionFeeOrNot() ? money+TRANSFER_FEE : money))
             {
                 return;
             }
-            var comment = getComment("Enter a comment for your withdrawal(blank to skip): ");
-            var tasks = new Task[]
-            {
-                //sender
-                addTransaction(account, new Transaction("T", account.accountNumber, destAcc.accountNumber, money, comment)),
-                //receiver
-                addTransaction(destAcc, new Transaction("T", destAcc.accountNumber, money, comment)),
-                account.transactionFeeOrNot()? addTransaction(account, new Transaction("S", account.accountNumber, TRANSFER_FEE, "Transfer fee of $0.20.")) : null
-            };
+            var comment = GetComment("Enter a comment for your withdrawal(blank to skip): ");
 
-            // if (account.transactionFeeOrNot())
-            // {
-            //     addTransaction(account, new Transaction("S", account.accountNumber, TRANSFER_FEE, "Transfer fee of $0.20."));
-            // }
+            //sender
+            AddTransaction(account, new Transaction("T", account.accountNumber, destAcc.accountNumber, money, comment));
+            //receiver
+            AddTransaction(destAcc, new Transaction("T", destAcc.accountNumber, money, comment));
+            if (account.TransactionFeeOrNot())
+            {
+                AddTransaction(account, new Transaction("S", account.accountNumber, TRANSFER_FEE, "Transfer fee of $0.20."));
+            }
             Console.WriteLine("Transaction successfully processed.");
 
         }
-
-        private void withdrawToAccount(Account account)
+        //withdraw function, fee if past the threshold of 4 freebies
+        private void WithdrawToAccount(Account account)
         {
-            if (account.transactionFeeOrNot())
+            if (account.TransactionFeeOrNot())
             {
                 Console.WriteLine("You will be charged a service fee of $0.10.");
             }
-            var money = getMoney($"Enter an amount to withdraw from Account #{account.accountNumber} (0 to exit).");
-            if (!checkAccountBalance(account, money))
+            var money = GetMoney($"Enter an amount to withdraw from Account #{account.accountNumber} (0 to exit).");
+            if (!CheckAccountBalance(account, account.TransactionFeeOrNot() ? money + WITHDRAWAL_FEE : money))
             {
                 return;
             }
-            var comment = getComment("Enter a comment for your withdrawal(blank to skip): ");
+            var comment = GetComment("Enter a comment for your withdrawal(blank to skip): ");
 
-            var tasks = new Task[]
+
+            AddTransaction(account, new Transaction("W", account.accountNumber, money, comment));
+            if (account.TransactionFeeOrNot())
             {
-                addTransaction(account, new Transaction("W", account.accountNumber, money, comment)),
-                account.transactionFeeOrNot()? addTransaction(account, new Transaction("S", account.accountNumber, WITHDRAWAL_FEE, "Withdrawal fee of $0.10.")) : null
-            };
-
-            //   addTransaction(account, new Transaction("W", account.accountNumber, money, comment));
-            //     if (account.transactionFeeOrNot())
-            //     {
-            //   addTransaction(account, new Transaction("S", account.accountNumber, WITHDRAWAL_FEE, "Withdrawal fee of $0.10."));
-            //   }
+                AddTransaction(account, new Transaction("S", account.accountNumber, WITHDRAWAL_FEE, "Withdrawal fee of $0.10."));
+            }
             Console.WriteLine("Transaction successfully processed.");
         }
-
-        private void depositToAccount(Account account)
+        //deposit function
+        private void DepositToAccount(Account account)
         {
-            var money = getMoney($"Enter an amount to deposit to Account #{account.accountNumber} (0 to exit).");
+            var money = GetMoney($"Enter an amount to deposit to Account #{account.accountNumber} (0 to exit).");
             if (money == 0)
             {
                 Console.WriteLine("Deposit cancelled.");
                 return;
             }
-            var comment = getComment("Enter a comment for your deposit(blank to skip): ");
-            _ = addTransaction(account, new Transaction("D", account.accountNumber, money, comment));
+            var comment = GetComment("Enter a comment for your deposit(blank to skip): ");
+            AddTransaction(account, new Transaction("D", account.accountNumber, money, comment));
             Console.WriteLine("Transaction successfully processed.");
         }
-    
-        private async Task addTransaction(Account account, Transaction transaction)
+        //add to account & activate observer to update db
+        private void AddTransaction(Account account, Transaction transaction)
         {
-            notify(account, transaction);
+            account.AddTransaction(transaction);
+            Notify(account, transaction);
         }
-
-        private decimal getMoney(string message)
+        //grab input for transaction amount
+        private decimal GetMoney(string message)
         {
             Console.WriteLine(message);
             bool check = false;
@@ -300,8 +293,8 @@ namespace MCBA.Managers
             }
             return 0;
         }
-
-        private string getComment(string message)
+        //grab comment input..
+        private string GetComment(string message)
         {
             Console.WriteLine(message);
             var comment = Console.ReadLine();
@@ -310,18 +303,21 @@ namespace MCBA.Managers
         }
 
         //observer stuff
-        public void register(DatabaseObserver observer)
+        public void Register(DatabaseObserver observer)
         {
             _observers.Add(observer);
         }
-        public void unRegister(DatabaseObserver observer)
+        public void UnRegister(DatabaseObserver observer)
         {
             _observers.Remove(observer);
         }
-        public void notify(Account account, Transaction transaction)
+        public async void Notify(Account account, Transaction transaction)
         {
-            _observers.ToList().ForEach(o => o.AddTransaction(transaction));
-            _observers.ToList().ForEach(o => o.UpdateAccount(account));
+            foreach (DatabaseObserver o in _observers)
+            {
+                await o.AddTransaction(transaction);
+                await o.UpdateAccount(account);
+            }
         }
 
     }
