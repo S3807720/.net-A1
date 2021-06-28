@@ -112,7 +112,6 @@ public class Menu
                 {
                     GoToMenu(choice);
                 }
-                Console.Clear();
             }
             catch (FormatException)
             {
