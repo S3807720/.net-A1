@@ -7,7 +7,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Net.Http;
-
+using System.Threading.Tasks;
 
 namespace MCBA.Managers
 {
@@ -35,15 +35,15 @@ namespace MCBA.Managers
 				address = X.Field<string>("Address"),
 				city = X.Field<string>("City"),
 				postCode = X.Field<string>("PostCode"),
-				accounts = accountManager.getAccounts(X.Field<int>("CustomerID"))
+				accounts = accountManager.GetAccounts(X.Field<int>("CustomerID"))
 			}).ToList();
 
 		}
 
-		public void InsertCustomer(Customer customer)
+		public async Task<int> InsertCustomer(Customer customer)
 		{
 			using var connection = new SqlConnection(_connectionString);
-			connection.Open();
+			await connection.OpenAsync();
 
 			using var command = connection.CreateCommand();
 			command.CommandText =
@@ -55,8 +55,8 @@ namespace MCBA.Managers
 			command.Parameters.AddWithValue("city", (customer.city == null) ? DBNull.Value : customer.city);
 			command.Parameters.AddWithValue("postCode", (customer.postCode == null) ? DBNull.Value : customer.postCode);
 
-			command.ExecuteNonQuery();
-
+			await command.ExecuteNonQueryAsync();
+			return 1;
 		}
 	}
 

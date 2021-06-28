@@ -11,7 +11,7 @@ namespace MCBA.Models
         public decimal balance{ get; set; }
         public List<Transaction> transactions { get; set; }
 
-        public void setBalance()
+        public void SetBalance()
         {
             balance = 0;
             foreach (Transaction transacts in transactions)
@@ -28,7 +28,7 @@ namespace MCBA.Models
             }
        }
         //check fee
-        public bool transactionFeeOrNot()
+        public bool TransactionFeeOrNot()
         {
             int counter = 0;
             foreach(Transaction trans in transactions)
@@ -45,11 +45,10 @@ namespace MCBA.Models
             return false;
         }
 
-        public void addTransaction(Transaction transact)
+        public void AddTransaction(Transaction transact)
         {
-            Console.WriteLine($"{accountNumber} adding {transact}");
             transactions.Add(transact);
-            setBalance();
+            SetBalance();
         }
         public override string ToString()
         {

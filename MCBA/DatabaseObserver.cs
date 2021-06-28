@@ -11,24 +11,27 @@ namespace MCBA
 {
     class DatabaseObserver
     {
-        public void UpdateAccount(Account acc)
+		string connectionString = Utilities.connectionString;
+		//update account balance
+		public async Task<int> UpdateAccount(Account acc)
         {
-            acc.setBalance();
-            using var connection = new SqlConnection(Utilities.connectionString);
-            connection.Open();
+            acc.SetBalance();
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
 
             using var command = connection.CreateCommand();
             command.CommandText = $"UPDATE Account SET Balance = @balance WHERE AccountNumber = @AccountID";
             command.Parameters.AddWithValue("@balance", acc.balance);
             command.Parameters.AddWithValue("@AccountID", acc.accountNumber);
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
 			Menu.UpdateLogin();
+			return 1;
 		}
-
-        public void AddTransaction(Transaction transaction)
+		//add transaction to db
+		public async Task<int> AddTransaction(Transaction transaction)
         {
-			using var connection = new SqlConnection(Utilities.connectionString);
-			connection.Open();
+			using var connection = new SqlConnection(connectionString);
+			await connection.OpenAsync();
 
 			using var command = connection.CreateCommand();
 			command.CommandText =
@@ -37,6 +40,7 @@ namespace MCBA
 				"@destinationAccountNumber, @amount, @comment, @transactionTimeUtc)";
 			command.Parameters.AddWithValue("transactionType", transaction.transactionType);
 			command.Parameters.AddWithValue("accountNumber", transaction.accountNumber);
+			//either include dbnull or actual destination if exists
 			if (transaction.destinationAccountNumber != null)
 			{
 				command.Parameters.AddWithValue("@DestinationAccountNumber", transaction.destinationAccountNumber);
@@ -49,8 +53,10 @@ namespace MCBA
 			command.Parameters.AddWithValue("comment", (transaction.comment == null) ? DBNull.Value : transaction.comment);
 			command.Parameters.AddWithValue("transactionTimeUtc", transaction.transactionTimeUtc);
 
-			command.ExecuteNonQuery();
+			await command.ExecuteNonQueryAsync();
+			return 1;
 		}
+
 
     }
 }

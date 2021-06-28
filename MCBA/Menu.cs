@@ -17,7 +17,6 @@ public class Menu
     static Customer loggedIn = null;
     private HashSet<DatabaseObserver> _observers = new HashSet<DatabaseObserver>();
     private AccountManager accountManager = new AccountManager();
-    private DatabaseObserver dbObs = new DatabaseObserver();
 
     public static void UpdateLogin()
     {
@@ -33,6 +32,10 @@ public class Menu
     }
     public Menu()
     {
+        //register observer
+        var dbObs = new DatabaseObserver();
+        Register(dbObs);
+        accountManager.Register(dbObs);
         AddCustomerDataToDatabase();
         AddLoginDataToDatabase();
         Login();
@@ -49,7 +52,7 @@ public class Menu
             String password = Utilities.HideCharacter();
             var logMgr = new LoginManager();
             var message = "";
-            var id = logMgr.checkLogin(loginId, password, ref message);
+            var id = logMgr.CheckLogin(loginId, password, ref message);
             if (id == -1)
             {
                 Console.WriteLine("\n"+message);
@@ -61,9 +64,6 @@ public class Menu
                 SetLogin(id);
             }
         }
-        //register observer
-        Register(dbObs);
-        accountManager.register(dbObs);
         DisplayMenu();
     }
 
@@ -112,6 +112,7 @@ public class Menu
                 {
                     GoToMenu(choice);
                 }
+                Console.Clear();
             }
             catch (FormatException)
             {
@@ -128,15 +129,15 @@ public class Menu
         switch (choice)
         {
             case 1:
-                accountManager.selectAccount(loggedIn, "Please enter the account number of the account to deposit to.(0 to exit): ",
+                accountManager.SelectAccount(loggedIn, "Please enter the account number of the account to deposit to.(0 to exit): ",
                     TransactionTypes.Deposit);
                 break;
             case 2:
-                accountManager.selectAccount(loggedIn, "Please enter the account number of the account to withdraw from.(0 to exit): ",
+                accountManager.SelectAccount(loggedIn, "Please enter the account number of the account to withdraw from.(0 to exit): ",
                     TransactionTypes.Withdraw);
                 break;
             case 3:
-                accountManager.selectAccount(loggedIn, "Please enter the account number of the account you wish to transfer from.(0 to exit): ",
+                accountManager.SelectAccount(loggedIn, "Please enter the account number of the account you wish to transfer from.(0 to exit): ",
                     TransactionTypes.TransferOut);
                 break;
             case 4:
@@ -151,7 +152,7 @@ public class Menu
         return;
     }
 
-    private void AddCustomerDataToDatabase()
+    private async void AddCustomerDataToDatabase()
     {
         var customerManager = new CustomerManager();
         if (customerManager.customers.Any())
@@ -174,13 +175,13 @@ public class Menu
         var transactionsManager = new TransactionsManager();
         foreach (var customer in customers)
         {
-            customerManager.InsertCustomer(customer);
+            await customerManager.InsertCustomer(customer);
 
             foreach (var account in customer.accounts)
             {
-                account.setBalance();
+                account.SetBalance();
                 account.customerId = customer.customerId;
-                accountManager.InsertAccount(account);
+                await accountManager.InsertAccount(account);
                 foreach (var transaction in account.transactions)
                 {
                     transaction.accountNumber = account.accountNumber;
@@ -192,7 +193,7 @@ public class Menu
         }
     }
 
-    private void AddLoginDataToDatabase()
+    private async void AddLoginDataToDatabase()
     {
         var loginManager = new LoginManager();
         if (loginManager.logins.Any())
@@ -213,7 +214,7 @@ public class Menu
         });
         foreach (var login in logins)
         {
-            loginManager.InsertLogin(login);
+            await loginManager.InsertLogin(login);
         }
     }
 
@@ -225,14 +226,21 @@ public class Menu
     {
         _observers.Remove(observer);
     }
-    private void Notify(Account account)
+    private async void Notify(Account account)
     {
-        _observers.ToList().ForEach(o => o.UpdateAccount(account));
+        foreach (DatabaseObserver o in _observers)
+        {
+            var f = await o.UpdateAccount(account);
+        }
     }
 
-    private void Notify(Transaction transaction)
+    private async void Notify(Transaction transaction)
     {
-        _observers.ToList().ForEach(o => o.AddTransaction(transaction));
+
+        foreach(DatabaseObserver o in _observers)
+        {
+            var f = await o.AddTransaction(transaction);
+        }
     }
 
 }
